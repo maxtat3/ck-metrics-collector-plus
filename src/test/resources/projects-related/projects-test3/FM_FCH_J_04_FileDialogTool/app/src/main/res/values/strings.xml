@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">File Dialog</string>
+
+    <!-- Main -->
+
+    <string name="path_display_hint" translatable="false">Rückgabe Status</string>
+
+    <string name="pick_a_file_to_load_button" translatable="false">Datei laden</string>
+    <string name="pick_a_file_to_load_description" translatable="false">Liefert den gewälten Pfad+ Dateinamen zurück. Wenn kein
+    Dateiname gewählt wurde (z.B. der BackButton wurde gedrückt) dann wird nur der Pfad zurückgeliefert.
+    Benutzen Sie diesen Modus, wenn Sie eine Datei zum Laden auswählen möchten</string>
+
+    <string name="pick_save_loc_button" translatable="false">Datei speichern</string>
+    <string name="pick_save_loc_description" translatable="false">Wählen Sie einen Speicherort oder eine Datei die Sie
+    überschreiben möchten. Liefert entweder den gewählten Pfad zurück (wenn im fileChooser der
+    speichere- button gedrückt wurde) oder den Pfad inklusive der zu überschreibenden Datei.</string>
+
+    <string name="reset_last_loc_visited" translatable="false">Wenn Sie das hier abhaken, dann wird beim Aufruf
+    des fileChoosers das Verzeichniss geöffnet, das Sie bei Aufruf (programatisch) übergeben und nicht das
+    zuletzt besuchte. Das letzte gespeicherte Verzeichniss wird zurückgesetzt.</string>
+
+</resources>

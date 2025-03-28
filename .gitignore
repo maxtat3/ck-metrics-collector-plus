@@ -1,0 +1,43 @@
+# https://github.com/github/gitignore/blob/main/Gradle.gitignore
+# https://github.com/github/gitignore/blob/main/Android.gitignore
+# https://github.com/github/gitignore/blob/main/Java.gitignore
+
+# IntelliJ
+*.iml
+.idea/
+misc.xml
+deploymentTargetDropDown.xml
+render.experimental.xml
+
+
+### Java
+*.class
+*.log
+*.jar
+
+*.zip
+*.tar.gz
+
+*.rar
+.classpath
+.project
+
+.settings/
+target/
+bin/
+build/
+
+*.launch
+
+local.properties
+
+
+# Gradle files
+.gradle/
+build/
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Avoid ignore Gradle wrappper properties
+!gradle-wrapper.properties

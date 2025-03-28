@@ -1,0 +1,443 @@
+package app;
+
+import com.beust.jcommander.JCommander;
+import pojo.Project;
+import util.Utils;
+import web.GitHubDownloader;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+
+public class App {
+
+
+	public static String getAppVersion() {
+		AppProps.load();
+		return AppProps.get("MAJOR", "x") + "." + AppProps.get("MINOR", "x");
+	}
+
+	public static String getAppNameAndVer() {
+//		return AppProps.APP_NAME + " " + getAppVersion();   // TODO: 28.02.25 not work at now ...
+		return "app 1.0";
+	}
+
+
+	private static SysOutDelegate sysOutDelegate = new AppSysOut();
+
+	private static class AppSysOut implements SysOutDelegate {
+		@Override
+		public void println(String val) {
+			System.out.println(val);
+		}
+	}
+
+//	private static class AppSysOut implements SysOutDelegate {
+//		private String message = "";
+//
+//		@Override
+//		public void add(String msg){
+//			message += msg;
+//	        message += "\n";
+//		}
+//
+//		@Override
+//		public void println(String msg) {
+//			System.out.println(msg);
+//		}
+//	}
+
+	protected static void setSysOutDelegate(SysOutDelegate sysOutDelegate) {
+		App.sysOutDelegate = sysOutDelegate;
+	}
+
+
+	private String[] argv;
+
+	public App(String[] argv) {
+		this.argv = argv;
+	}
+
+
+	public static void main(String[] args) {
+		App app = new App(args);
+
+		Args cliArgs = new Args();
+		JCommander.newBuilder()
+				.addObject(cliArgs)
+				.build()
+				.parse(app.argv);
+
+		int len = args.length;
+
+		if (len == 0) {
+			String msg = "";
+			msg += getAppNameAndVer() + "\n";
+			msg += "Not passed arguments.\n";
+			msg += "See help using: -? or --help \n";    // See in {@link app.Args#isHelp}
+			msg += "Exit.\n";
+			sysOutDelegate.println(msg);
+			return;
+		}
+
+		if (len == 1 && cliArgs.isHelp()) {
+			sysOutDelegate.println(helpMsg());
+			JCommander.newBuilder()
+					.addObject(cliArgs)
+					.build()
+					.usage();
+			sysOutDelegate.println(helpExamplesRunMsg());
+			return;
+		}
+
+		// Checks
+		boolean isSetCorrectArgs = false;
+
+		if ( !checkGeneralModeArgs(cliArgs) ) {
+			return;
+		}
+
+		switch (cliArgs.getMode()) {
+			case Args.MODE_SIGN:
+				isSetCorrectArgs = checkSignModeArgs(cliArgs);
+				break;
+
+			case Args.MODE_DOWNLOAD:
+				isSetCorrectArgs = checkDownloadModeArgs(cliArgs);
+				break;
+
+			case Args.MODE_METRICS:
+				isSetCorrectArgs = checkMetricsModeArgs(cliArgs);
+				break;
+		}
+
+		if ( !isSetCorrectArgs ) {
+			sysOutDelegate.println("What needs to be done ? See examples typed -? or --help \nExit.");
+			return;
+		}
+		// End checks
+
+		CalcSettings calcSettings = new CalcSettings();
+
+		String msg = "";
+		if (cliArgs.getMode().equals(Args.MODE_SIGN)) {
+			msg += "================================================ \n";
+			msg += "= Select SIGN projects in input source ODS  = \n";
+			msg += "================================================ \n";
+
+			msg += makeBackupInputODSFile(cliArgs.getInputODS());
+			sysOutDelegate.println(msg);
+			msg = "";
+
+			int countIDs = signProjects(cliArgs.getInputODS(), cliArgs.getSheetName(), cliArgs.getRange());
+
+			msg += countIDs + " 'names' and 'IDs' saved in input source ODS file. \n";
+			msg += "Finish.";
+			sysOutDelegate.println(msg);
+
+		} else if (cliArgs.getMode().equals(Args.MODE_DOWNLOAD)) {
+			msg += "================================================ \n";
+			msg += "= Select DOWNLOAD projects from github hosting = \n";
+			msg += "================================================ \n";
+
+			msg += makeBackupInputODSFile(cliArgs.getInputODS());
+			sysOutDelegate.println(msg);
+			msg = "";
+
+			String dwlCountProjects = downloadProjects(cliArgs.getInputODS(), cliArgs.getSheetName(), cliArgs.getRange(), cliArgs.getIgnoreRows(), cliArgs.getDestination());
+			if (dwlCountProjects.equals("-1") || dwlCountProjects.equals("-2")) return;
+
+			msg += "Downloaded " + dwlCountProjects + " projects.\n";
+			msg += "Finish.";
+			sysOutDelegate.println(msg);
+
+		} else if (cliArgs.getMode().equals(Args.MODE_METRICS)) {
+			msg += "================================================ \n";
+			msg += "= Select obtain METRICS from already downloaded projects = \n";
+			msg += "================================================ \n";
+
+			msg += makeBackupInputODSFile(cliArgs.getInputODS());
+			sysOutDelegate.println(msg);
+			msg = "";
+
+			int projectsCount = getMetrics(cliArgs.getInputODS(), cliArgs.getInputDir(), cliArgs.getSheetName(), cliArgs.getRange(), calcSettings);
+
+			msg += "Metric values saved to input ODS file.\n";
+			msg += "Processed " + projectsCount + " projects. \n";
+			msg += "Finish.";
+			sysOutDelegate.println(msg);
+
+		}
+	}
+
+	private static String makeBackupInputODSFile(String inputODS) {
+		String msg = "Create backup input ODS file to: ";
+		String bckODSFilePath = Utils.makeBackupSourceFile(new File(inputODS));
+		msg += bckODSFilePath;
+		return msg;
+	}
+
+
+	private static boolean checkSignModeArgs(Args cliArgs) {
+		boolean isCorrectArgMode, isCorrectArgInputODS;
+
+		isCorrectArgMode = checkGeneralModeArgs(cliArgs);
+		isCorrectArgInputODS = checkInputODS(cliArgs);
+
+		return isCorrectArgMode && isCorrectArgInputODS;
+	}
+
+	private static boolean checkDownloadModeArgs(Args cliArgs) {
+		boolean isCorrectArgMode, isCorrectArgInputODS, isCorrectArgDestDir = true;
+
+		isCorrectArgMode = checkGeneralModeArgs(cliArgs);
+		isCorrectArgInputODS = checkInputODS(cliArgs);
+
+		if (cliArgs.getDestination() == null) {
+			sysOutDelegate.println("Destination path must be passed.");
+			isCorrectArgDestDir = false;
+		}
+
+		return isCorrectArgMode && isCorrectArgInputODS && isCorrectArgDestDir;
+	}
+
+	private static boolean checkMetricsModeArgs(Args cliArgs) {
+		boolean isCorrectArgMode, isCorrectArgInputODS, isCorrectArgInputProjDir = true, isCorrectArgSheet = true;
+
+		isCorrectArgMode = checkGeneralModeArgs(cliArgs);
+		isCorrectArgInputODS = checkInputODS(cliArgs);
+
+		if (cliArgs.getInputDir() == null) {
+			sysOutDelegate.println("Input projects dir must be passed. ");
+			isCorrectArgInputProjDir = false;
+		}
+
+		if (cliArgs.getSheetName() == null) {
+			sysOutDelegate.println("Sheet name must be passed.");
+			isCorrectArgSheet = false;
+		}
+
+		return isCorrectArgMode && isCorrectArgInputODS && isCorrectArgInputProjDir && isCorrectArgSheet;
+	}
+
+	// Internal use only
+	private static boolean checkGeneralModeArgs(Args cliArgs) {
+		if (cliArgs.getMode() == null) {
+			sysOutDelegate.println("Mode must be selected.\nExit.");
+			return false;
+		}
+		return true;
+	}
+
+	// Internal use only
+	private static boolean checkInputODS(Args cliArgs) {
+		if (cliArgs.getInputODS() == null) {
+			sysOutDelegate.println("Input source ODS file argument must be passed.");
+			return false;
+		}
+		return true;
+	}
+
+
+	/**
+	 * Make sign projects IDs in selected sheet in source ODS file.
+	 *
+	 * @param srcODS
+	 * @param sheetName
+	 * @return generated and signed id of projects
+	 */
+	private static int signProjects(String srcODS, String sheetName, int[] range) {
+		ODSProcess odsProcess = new ODSProcess(srcODS, sheetName, range, ODSProcess.ExcludeChecks.ID_NAME);
+
+		Hashtable<Integer, String> names = odsProcess.generateNamesInSheet();
+		int countNames = odsProcess.saveNamesToSheet(names);
+
+		Hashtable<Integer, String> ids = odsProcess.generateIDsInSheet();
+		int countIDs = odsProcess.saveIDsToSheet(ids);
+
+		if (countNames != countIDs) {
+			throw new IllegalStateException("The amount of processed projects not match when generating IDs and Names. \n" +
+					"Names: " + countNames + ", " + "Ids: " + countIDs);
+		}
+
+		return countIDs;
+	}
+
+	/**
+	 * Download projects picked in source ODS file from GitHub hosting .
+	 *
+	 * @param srcFile    source ODS file where are located URL for each project.
+	 * @param sheetName
+	 * @param range
+	 * @param ignoreRows
+	 * @param destDir    destination dir where will be saved downloaded projects.
+	 */
+	private static String downloadProjects(String srcFile, String sheetName, int[] range, List<Integer> ignoreRows, String destDir){
+		// Каталог в котором будут сохранены проекты должен быть пустой.
+		File dest = new File(destDir);
+		if (!dest.isDirectory()) {  // TODO: 08.02.25 may be use throw new NotFoundException !?
+			sysOutDelegate.println("Destination path is not directory.\nExit.");
+			return "-1";
+		}
+		if (dest.list().length != 0) { // TODO: 08.02.25 may be use throw IOException !?
+			sysOutDelegate.println("Destination directory must be empty.\nExit.");
+			return "-2";
+		}
+
+		int dwlCount = 0;
+		ArrayList<Project> projects = new ODSProcess(srcFile, sheetName, range).getProjectsFromSheet();
+		try {
+			for (Project pr : projects) {
+				if (dwlCount == 0) sysOutDelegate.println("-------");
+				if (ignoreRows.contains(pr.getRow())) {
+					sysOutDelegate.println("-----------------------------------------------");
+					sysOutDelegate.println("!!! Ignoring row: " + pr.getRow() + ", ID: " + pr.getId() + " !!!");
+					sysOutDelegate.println("-----------------------------------------------");
+					continue;
+				}
+				sysOutDelegate.println("Download project ID: " + pr.getId() + " (" + dwlCount + " / " + projects.size() + ")");
+				new GitHubDownloader().downloadGitRepo(pr.getId(), pr.getURL(), destDir);
+				sysOutDelegate.println("-------");
+				dwlCount++;
+			}
+
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+
+		return String.valueOf(dwlCount);
+	}
+
+	/**
+	 * @param srcFile      absolute path to input source ODS file
+	 * @param srcProjDir   absolute path to analyzing directory contained projects
+	 * @param sheetName    selected sheet name
+	 * @param range
+	 * @param calcSettings
+	 * @return
+	 */
+	private static int getMetrics(String srcFile, String srcProjDir, String sheetName, int[] range, CalcSettings calcSettings) {
+		Processor proc = new Processor();
+		ODSProcess odsProcess = new ODSProcess(srcFile, sheetName, range);
+
+		ArrayList<Project> projects = new ArrayList<>();
+		ArrayList<String> projPathsFS = proc.findSrcPathsForAllProjectsInFS(srcProjDir);
+
+		// Call this method only for obtain all IDs in input source ODS file.
+		ArrayList<Project> projectsODS = odsProcess.getProjectsFromSheet();
+
+		for (int i = 0; i < projPathsFS.size(); i++) {
+			String prPathFS = projPathsFS.get(i); // абс. (полный) путь к отдельному проекту который подлежит анализу.
+			System.out.println("FS path = " + prPathFS);
+
+			proc.extractMetricsCK(prPathFS);
+
+			// Имя выходного файла обычно class.csv, но в данном случае СК добавляет еше префикс имени последнего каталога из пути
+			// к анализируемому проекту. Например "~/Dwl/PR1/com/manf/src/" , тогда имя файла будет srcclass.csv .
+			// Получим это имя файла из пути.
+			String destFileNameClassCK = new File(prPathFS).getName() + "class.csv";
+
+			// Получаем полный путь к файлу, созданному СК.
+			// Почему-то СК сохраняет выходной CSV файл на уровень выше.
+			prPathFS = prPathFS.substring(0, prPathFS.lastIndexOf(File.separatorChar) );
+
+			String pathFileClassCK = prPathFS + File.separatorChar + destFileNameClassCK;
+			System.out.println("pathFileClassCK = " + pathFileClassCK);
+
+			/*
+			 Получаем ID проекта из полного пути к каталогу который подлежит анализу.
+			 Так как в данном режиме указывается только путь к корню каталога, в котором находятся под-каталоги проектов,
+			 предполагается что каждый такой каталог назван согласно шаблону ID. То есть имя каталога проекта
+			 и есть его ID. Соответственно в выходной CSV файл будет записан этот ID.
+			 Данное предположение также основано на том что сначала каждый проект должен иметь свой ID в исходном
+			 ODS файле. Если это не так, то должна быть вызвана команда Args.SIGN. После этого проекты загружаются в
+			 определенный корневой каталог. Каждому под-каталогу загруженного проекта, автоматически будет присвоено
+			 имя его ID из исходного ODS файла.
+			*/
+			// Для работы данного алгоритма требуется два пути - текущий (i) и следующий (i+1).
+			// Сравниваются не одинаковые символы в этих двух путях.
+			String projID;
+			if (i < projPathsFS.size() - 1) {
+				projID = Utils.extractProjectIDFromFS(prPathFS, projPathsFS.get(i + 1));
+
+			} else {
+				projID = Utils.extractProjectIDFromFS(prPathFS, projPathsFS.get(0));// last project compared by first.
+			}
+			sysOutDelegate.println("Process project ID = " + projID);
+
+			Project project = new Project();
+			project.setId(projID);  // ID retrieved from FS
+
+			/*
+			Проект описанный в исходном ODS файле должен также находится в общем каталоге проектов, подлежащих анализу.
+			Только в таком случае возможно получение метрик. ID проекта в исходном ODS должно быть такое же, как и имя каталога
+			этого проекта в общем каталоге всех проектов.
+			Примечания для дальнейшего пояснения:
+			ODS - исходный файл,
+			projDir - каталог проекта в общем каталоге проектов на файл. Системе.
+			Общий каталог - каталог в котором находятся загруженные ранее проекты (командой DOWNLOAD) и подлежащие анализу (сбору числовых значений метрик).
+
+			Могут быть 3 ситуации:
+			1. Полное сопоставление (ODS+ projDir+). Получение метрик будет выполнено т.к. данные о проекте
+			находятся в исходном ODS файле и этот проект находится в общем каталоге проектов.
+			2. Частичное сопоставление (ODS+ projDir-). Получение метрик НЕ будет выполнено для этого проекта. Проект отсутствует в общем каталоге проектов.
+			3. Частичное сопоставление (ODS- projDir+). Получение метрик НЕ будет выполнено для этого проекта. ID проекта отсутствует (или не правильное) в исходном ODS файле.
+
+			Первоочередные - проекты находящиеся в общем каталоге проектов.
+			Т.к. прежде всего поиск проекта подлежащего анализу выполняется в общем каталоге проектов, а уже затем
+			в исходном ODS файле - будут проанализированы только проекты находящиеся в общем каталоге.
+			Если некий такое проект не находится в исходном ODS файле, только тогда будет выведено сообщение о том что
+			данный проект не будет проанализирован.
+			Это позволит выполнять анализ только нужных, загруженных проектов.
+			Например, в исходном ODS файле представлены ссылки по 100 проектам.
+			Для первых 50-и - числовые значения метрик получены. Далее загружены еще 10 проектов которые
+			в исходном файле имеют номер [51...60]. В общем каталоге находятся эти 10 проектов.
+			Соответственно мы запускаем процесс получения числовых значений метрик командой METRICS.
+			Будут получены значения метрик и записаны в исходный файл для этих 10-и проектов.
+			Соответственно остальные проекты в исходном файле игнорируются.
+			*/
+			int rowODS = -1;
+			for (Project prODS : projectsODS) {
+				if (prODS.getId().equals(projID)) {
+					rowODS = prODS.getRow();
+					break;
+				}
+			}
+			if (rowODS == -1) {
+				// Проект может быть не распознан потому что некоторые поля в исходном ODS документе могут быть не указаны.
+				// Например, не указано имя для проекта и этого уже достаточно чтобы проект не был распозан.
+				// См. метод app.ODSProcess.ProjectRow.isProjectRow
+				sysOutDelegate.println("Project " + projID + " not found in input ODS file. This project passed.\n");
+				continue;
+			}
+
+			// Подсчет числ. знач. метрик для каждого элемента проекта (класса, ...)
+			proc.calcMetrics(pathFileClassCK, project, calcSettings);
+			projects.add(project);
+		}
+
+		// Сохраняем числ. знач. всех метрик для каждого проекта в исходном файле.
+		return odsProcess.saveMetricsToSheet(projects);
+	}
+
+
+	private static String helpMsg() {
+		String msg = "";
+		msg += getAppNameAndVer() + "\n";
+		msg += "This tiny command-line (CLI) utility ... .";    // TODO do write help msg
+		return msg;
+	}
+
+	private static String helpExamplesRunMsg() {
+		String msg = "";
+		msg += "In next examples show all cycle of obtain numerical values of metrics. \n";
+		msg += "Sign (auto-generate) 'names' and 'ids' for projects. Next download this projects. Finally obtain metrics \n";
+		msg += "Examples:\n";
+		msg += "java -jar ~/ck-metrics-collector-plus.jar -?\n";
+		msg += "java -jar ~/ck-metrics-collector-plus.jar -m SIGN -s Sheet3 -i1 ~/Apps/projects.ods \n";
+		msg += "java -jar ~/ck-metrics-collector-plus.jar -m DOWNLOAD -s Sheet3 -i1 ~/Apps/projects.ods -d ~/Apps/FileManagers/ \n";
+		msg += "java -jar ~/ck-metrics-collector-plus.jar -m METRICS -s Sheet3 -i1 ~/Apps/projects.ods -i2 ~/Apps/FileManagers/ \n";
+		return msg;
+	}
+}

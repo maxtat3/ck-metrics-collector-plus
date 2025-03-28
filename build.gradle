@@ -1,0 +1,115 @@
+apply plugin: 'java'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+
+repositories {
+    mavenCentral()
+}
+
+
+ext.jarName = "jmetrics-collector-plus"
+
+private String generateJarName() {
+    def versionPropsFile = file('version.properties')
+    Properties versionProps = new Properties()
+    if (versionPropsFile.canRead()) {
+        versionProps.load(new FileInputStream(versionPropsFile))
+    }
+
+    def major = versionProps['MAJOR'].toInteger()
+    def minor = versionProps['MINOR'].toInteger()
+
+    String name = "${ext.jarName}_v$major.$minor"
+    return name;
+}
+
+
+tasks.named('jar') {
+//    sourceSets.main.java.srcDirs = ['src/main/java']
+    archiveBaseName = generateJarName()
+    destinationDirectory = layout.buildDirectory.dir('dist')
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+//            print(it)
+        }
+//        print('-------')
+        configurations.compileClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+//            print(it)
+        }
+    }
+
+    manifest {
+        attributes 'Main-Class': 'app.App'
+    }
+
+//    configurations.run
+//    include 'version.properties'
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
+
+//    from('src/test/resources/') {
+//        include '*.ods'
+//    }
+    from('.') {
+        include 'version.properties'
+    }
+}
+
+task(runApp, dependsOn: 'classes', type: JavaExec) {
+//    main = 'app.App'
+    mainClass.set("app.App")
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+task(runAppWithHelp, dependsOn: 'classes', type: JavaExec) {
+    main = 'App'
+    args = ["-?"]
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+//task(runAppWithArg0) {
+//    dependsOn("classes")
+//
+//    // set the main class to be executed
+//    mainClass.set("app.App")
+//
+//    // set the arguments to pass to the main method (optional)
+//    args("--arg1=value1", "--arg2=value2")
+//
+//    // set the classpath
+//    // classpath(configurations.getByName("runtimeClasspath"))
+//    // classpath(jvmRuntimeClasspath)
+//    classpath = java.sourceSets["main"].runtimeClasspath
+//
+//    // set the task description
+//    description = "Prepares the training dataset"
+//    group = "training"
+//}
+
+
+dependencies {
+    implementation 'org.apache.commons:commons-csv:1.12.0'
+    implementation 'com.github.miachm.sods:SODS:1.6.7'
+
+//    implementation 'org.eclipse.jgit:org.eclipse.jgit:5.13.3.202401111512-r'
+//    implementation 'org.eclipse.jgit:org.eclipse.jgit.ssh.apache:5.13.3.202401111512-r'
+//    implementation 'org.eclipse.jgit:org.eclipse.jgit.gpg.bc:5.13.3.202401111512-r'
+
+//    implementation 'org.eclipse.jgit:org.eclipse.jgit:7.1.0.202411261347-r'
+//    implementation 'org.eclipse.jgit:org.eclipse.jgit.ssh.apache:7.1.0.202411261347-r'
+//    implementation 'org.eclipse.jgit:org.eclipse.jgit.gpg.bc:7.1.0.202411261347-r'
+
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit.ssh.apache:7.0.0.202409031743-r'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit.gpg.bc:7.0.0.202409031743-r'
+
+    implementation 'com.beust:jcommander:1.78'
+
+    implementation 'com.github.mauricioaniche:ck:0.7.0'
+
+    testImplementation 'junit:junit:4.11'
+//    testImplementation() group: 'junit', name: 'junit', version: '4.11'
+}

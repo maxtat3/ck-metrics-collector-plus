@@ -1,0 +1,1 @@
+In this drectory presents small of part original source code of this projects. This only for retrieve tiny some metric values for unit tests.
