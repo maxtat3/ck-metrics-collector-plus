@@ -289,10 +289,6 @@ public class App {
 			sysOutDelegate.println("Destination path is not directory.\nExit.");
 			return "-1";
 		}
-		if (dest.list().length != 0) { // TODO: 08.02.25 may be use throw IOException !?
-			sysOutDelegate.println("Destination directory must be empty.\nExit.");
-			return "-2";
-		}
 
 		ODSProcess odsProc = new ODSProcess(srcFile, sheetName, range);
 		ArrayList<Project> projects = odsProc.getProjectsFromSheet();
