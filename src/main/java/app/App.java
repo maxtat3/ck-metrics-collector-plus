@@ -1,6 +1,7 @@
 package app;
 
 import com.beust.jcommander.JCommander;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import pojo.Project;
 import util.Utils;
 import web.GitHubDownloader;
@@ -53,7 +54,7 @@ public class App {
 	}
 
 
-	private String[] argv;
+	private static String[] argv;
 
 	public App(String[] argv) {
 		this.argv = argv;
@@ -264,6 +265,14 @@ public class App {
 		return countIDs;
 	}
 
+
+	// Values of this variables saving between recursive call main() method.
+	private static int dwlRow = ODSProcess.START_ROW_PROJECTS;
+	private static String prIDCurrDwl = "";
+	private static boolean isDwlErr = false;
+	private static int dwlErrCount = 0;
+	private static String prsDwlErrMsgBuff = "";
+
 	/**
 	 * Download projects picked in source ODS file from GitHub hosting .
 	 *
@@ -285,28 +294,59 @@ public class App {
 			return "-2";
 		}
 
-		int dwlCount = 0;
-		ArrayList<Project> projects = new ODSProcess(srcFile, sheetName, range).getProjectsFromSheet();
+		ODSProcess odsProc = new ODSProcess(srcFile, sheetName, range);
+		ArrayList<Project> projects = odsProc.getProjectsFromSheet();
+		int dwlCount = -1;
 		try {
-			for (Project pr : projects) {
-				if (dwlCount == 0) sysOutDelegate.println("-------");
-				if (ignoreRows.contains(pr.getRow())) {
+			if (isDwlErr) {
+				dwlRow++;
+				isDwlErr = false;
+			}
+			while (dwlRow <= odsProc.getRealLastProjectsRowFromSheet()) {
+				Project pr = projects.get(dwlRow - ODSProcess.START_ROW_PROJECTS);
+				prIDCurrDwl = pr.getId();
+				if (ignoreRows.contains(dwlRow)) {
 					sysOutDelegate.println("-----------------------------------------------");
-					sysOutDelegate.println("!!! Ignoring row: " + pr.getRow() + ", ID: " + pr.getId() + " !!!");
+					sysOutDelegate.println("!!! Ignoring row: " + dwlRow + ", ID: " + pr.getId() + " !!!");
 					sysOutDelegate.println("-----------------------------------------------");
 					continue;
 				}
+				sysOutDelegate.println("-------");  // delimiter line in start project downloading
+
+				dwlCount = dwlRow - ODSProcess.START_ROW_PROJECTS + 1;  // Starting from number 1.
 				sysOutDelegate.println("Download project ID: " + pr.getId() + " (" + dwlCount + " / " + projects.size() + ")");
 				new GitHubDownloader().downloadGitRepo(pr.getId(), pr.getURL(), destDir);
-				sysOutDelegate.println("-------");
-				dwlCount++;
-			}
+				// After thrown exception in GitHubDownloader - below code not call !!!
 
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+				dwlRow++;
+				sysOutDelegate.println("-------");  // delimiter line in end project downloading
+			}
+			// Wrong dwlRow++  caused in last iteration.
+			// This need for return actual numbers of downloaded project for prevent recursion call main and then this method.
+			if (dwlRow > odsProc.getRealLastProjectsRowFromSheet()) dwlRow--;
+
+		} catch (GitAPIException e) { // catch TransportException
+			isDwlErr = true;
+			dwlErrCount++;
+
+			if(dwlErrCount == 1) prsDwlErrMsgBuff = "Not downloaded projects are: \n";
+			prsDwlErrMsgBuff += "Row: " + dwlRow + ", project ID: " + prIDCurrDwl + "\n";
+
+			sysOutDelegate.println("~~~~ Downloading project ID: " + prIDCurrDwl + " caused error. ~~~~");
+			sysOutDelegate.println("-------");
+
+			main(argv);
 		}
 
-		return String.valueOf(dwlCount);
+		// Make action in end download all projects
+		if (dwlRow == odsProc.getRealLastProjectsRowFromSheet()) {
+			sysOutDelegate.println("-----------------------------------------------");
+			sysOutDelegate.println(prsDwlErrMsgBuff);
+			sysOutDelegate.println("-----------------------------------------------");
+			return String.valueOf(dwlCount);
+		}
+
+		return "-"; // not call.
 	}
 
 	/**

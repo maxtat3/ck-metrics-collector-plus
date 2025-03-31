@@ -48,6 +48,8 @@ public class AppTest {
 
 	private static final String SRC_PROJECTS_LIST_3PROJECTS = "src/test/resources/projects-list_3pr.ods";
 
+	private static final String SRC_PROJECTS_TRANSPORT_EXCEPTION_HTTP400 = "src/test/resources/projects-list_dwl-err_TransportEx.ods";
+
 	private static final String DEST_DIR_NOT_EMPTY = "src/test/resources/dir-not-empty";
 	private static final String DEST_DIR_EMPTY = "src/test/resources/dir-empty";
 	private static final String DEST_PATH_IS_FILE = "src/test/resources/dir-not-empty/file.txt";
@@ -304,6 +306,39 @@ public class AppTest {
 			}
 			GitHubDownloaderTest.removeDestDir();
 		}
+	}
+
+//	Test for debug org.eclipse.jgit.api.errors.TransportException (400 Bad request)
+	@Test
+	public void testDownloadProjects_catchTransportException_tmpDwlDir() {
+		String DEST_TMP_DIR_EMPTY;
+		try {
+			DEST_TMP_DIR_EMPTY = Files.createTempDirectory("dwlGitRepos").toFile().getAbsolutePath();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		String[] args = {
+				"--input-ods", SRC_PROJECTS_TRANSPORT_EXCEPTION_HTTP400,
+				"--mode", "DOWNLOAD",
+				"--sheet-name", "Sheet1",
+				"--destination", DEST_TMP_DIR_EMPTY
+		};
+		App.main(args);
+	}
+
+	//	Test for debug org.eclipse.jgit.api.errors.TransportException (400 Bad request)
+	@Test
+	public void testDownloadProjects_catchTransportException_CustomDir() {
+		String DEST_TMP_DIR_EMPTY = System.getProperty("user.home") + "/Downloads/TmpMetricsProjectsSet7/FM_and_FCH";
+
+		String[] args = {
+				"--input-ods", SRC_PROJECTS_TRANSPORT_EXCEPTION_HTTP400,
+				"--mode", "DOWNLOAD",
+				"--sheet-name", "Sheet1",
+				"--destination", DEST_TMP_DIR_EMPTY
+		};
+		App.main(args);
 	}
 //	===========================================
 
