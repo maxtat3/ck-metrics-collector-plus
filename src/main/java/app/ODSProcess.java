@@ -13,6 +13,9 @@ import java.util.*;
 
 public class ODSProcess {
 
+	private static final boolean IS_LOG = false;
+//	private static final boolean IS_LOG = true;
+
 	public static final int START_ROW_HEADER = 1;
 
 	// FIXME: 15.03.25 Change javadoc
@@ -143,7 +146,7 @@ public class ODSProcess {
 
 			// This is where need to use the method sheet.getMaxRows() in order to go through
 			// the maximum number of rows that this method returned.
-			System.out.println("sheet.getMaxRows()=" + sheet.getMaxRows());
+			log("sheet.getMaxRows()=" + sheet.getMaxRows());
 
 			// TODO: 19.03.25 move to single method
 			int startRow = range[0];
@@ -155,7 +158,7 @@ public class ODSProcess {
 
 //			Обратить внимание на сравнение row <= endRow !
 			for (int row = startRow; row <= endRow; row++) {
-				System.out.println("row = " + row);
+				log("row = " + row);
 
 //				Проверка 1
 //				Иногда метод sheet.getMaxRows() возвращает корректные результаты последней строки содержащей
@@ -196,7 +199,7 @@ public class ODSProcess {
 				}
 				try {
 					int num = (int) Double.parseDouble(numObj.toString());
-//					System.out.println("num = " + num + " | " + "numObj = " + numObj);
+//					log("num = " + num + " | " + "numObj = " + numObj);
 				} catch (NumberFormatException e) {
 					throw new WrongProjectCellFormatException("For project in row " + row + " value 'number' has a non-numeric format.");
 				}
@@ -243,7 +246,7 @@ public class ODSProcess {
 			throw new RuntimeException(e);
 		}
 
-		System.out.println("lastRow = " + lastRow);
+		log("lastRow = " + lastRow);
 
 		return lastRow;
 	}
@@ -318,7 +321,7 @@ public class ODSProcess {
 
 //			endRow++;
 
-			System.out.println("endRow = " + endRow);
+			log("endRow = " + endRow);
 
 			// Obtain columns
 //			Обратить внимание на сравнение row <= endRow !
@@ -328,26 +331,26 @@ public class ODSProcess {
 				int num = Utils.convertDoubleStrToInt(sheet.getRange(UtilsODS.convToA1NotationCell(row, NUM_COLUMN)).getValue());
 //
 //				if (sheet.getRange(UtilsODS.convToA1NotationCell(row, NUM_COLUMN) ).getValue() == null) {
-//					System.out.println("For project " + num + " not picked 'number' value.");
-//					System.out.println("Exit.");
+//					log("For project " + num + " not picked 'number' value.");
+//					log("Exit.");
 //					isPassChecks = false;
 //				}
 //
 //				if (sheet.getRange( UtilsODS.convToA1NotationCell(row, ID_COLUMN) ).getValue() == null) {
-//					System.out.println("For project " + num + " not picked 'ID' value.");
-//					System.out.println("Exit.");
+//					log("For project " + num + " not picked 'ID' value.");
+//					log("Exit.");
 //					isPassChecks = false;
 //				}
 //
 //				if (sheet.getRange( UtilsODS.convToA1NotationCell(row, TYPE_COLUMN) ).getValue() == null) {
-//					System.out.println("For project " + num + " not picked 'type' value.");
-//					System.out.println("Exit.");
+//					log("For project " + num + " not picked 'type' value.");
+//					log("Exit.");
 //					isPassChecks = false;
 //				}
 //
 //				if (sheet.getRange( UtilsODS.convToA1NotationCell(row, URL_COLUMN) ).getValue() == null) {
-//					System.out.println("For project " + num + " not picked 'URL' value.");
-//					System.out.println("Exit.");
+//					log("For project " + num + " not picked 'URL' value.");
+//					log("Exit.");
 //					isPassChecks = false;
 //				}
 //
@@ -366,7 +369,7 @@ public class ODSProcess {
 				String lang = sheet.getRange(UtilsODS.convToA1NotationCell(row, LANG_COLUMN)).getValue().toString();
 				String url = sheet.getRange(UtilsODS.convToA1NotationCell(row, URL_COLUMN)).getValue().toString();
 
-//				System.out.println(num + " | " + id + " | "	+ name + " | "	+ type + " | " + subType + " | " + lang + " | "	+ url);
+//				log(num + " | " + id + " | "	+ name + " | "	+ type + " | " + subType + " | " + lang + " | "	+ url);
 				projects.add( new Project(row, num, id, name, type, subType, lang, url) );
 			}
 
@@ -480,7 +483,7 @@ public class ODSProcess {
 
 			for (Integer row : tmpList) {
 				String name = names.get(row);
-				System.out.println("name = " + name);
+				log("name = " + name);
 				sheet.getRange(UtilsODS.convToA1NotationCell(row, NAME_COLUMN)).setValue(name);
 				count++;
 			}
@@ -512,7 +515,7 @@ public class ODSProcess {
 
 			for (Integer row : tmpList) {
 				String id = ids.get(row);
-				System.out.println("id = " + id);
+				log("id = " + id);
 				sheet.getRange(UtilsODS.convToA1NotationCell(row, ID_COLUMN)).setValue(id);
 				count++;
 			}
@@ -571,7 +574,7 @@ public class ODSProcess {
 			String lb = HEADER_COLUMNS[0] + START_ROW_HEADER;    // Example: H1
 			String rb = HEADER_COLUMNS[HEADER_COLUMNS.length - 1] + START_ROW_HEADER; // Example: N1
 			String range = lb + ":" + rb; // Example: H1:N1
-			System.out.println("range header = " + range);
+			log("range header = " + range);
 			sheet.getRange(range).setValues((Object[]) HEADER_NAMES);
 
 			for (Project pr : projects) {
@@ -579,7 +582,7 @@ public class ODSProcess {
 				lb = HEADER_COLUMNS[0] + pr.getRow();
 				rb = HEADER_COLUMNS[HEADER_COLUMNS.length - 1] + pr.getRow();
 				range = lb + ":" + rb;  // Example: H5:N5
-				System.out.println("range metrics values = " + range);
+				log("range metrics values = " + range);
 
 				Object[] metricValues = {
 						String.valueOf(pr.getMetrics().getLOC()),
@@ -629,7 +632,7 @@ public class ODSProcess {
 //
 //			// This is where need to use the method sheet.getMaxRows() in order to go through
 //			// the maximum number of rows that this method returned.
-//			System.out.println("sheet.getMaxRows()=" + sheet.getMaxRows());
+//			log("sheet.getMaxRows()=" + sheet.getMaxRows());
 //			for (int row = START_ROW; row < sheet.getMaxRows(); row++) {
 //				projectRow = new ProjectRow(
 //						sheet.getRange(UtilsODS.convToA1NotationCell(row, NUM_COLUMN)).getValue(),
@@ -665,26 +668,27 @@ public class ODSProcess {
 //		/**
 //		 * Return codes after checks is this row contain project data ?
 //		 */
-////		public enum RetCode {
-////			SUCCESS("SUCCESS"),
-////			ERR_NUM("Error in 'number' cell"),
-////			ERR_ID("Error in 'ID' cell"),
-////			ERR_NAME("Error in 'name' cell"),
-////			ERR_TYPE("Error in 'type' cell"),
-////			ERR_LANG("Error in 'lang' cell"),
-////			ERR_URL("Error in 'URL' cell");
-////
-////			private final String text;
-////
-////			RetCode(final String text) {
-////				this.text = text;
-////			}
-////
-////			@Override
-////			public String toString() {
-////				return text;
-////			}
-////		}
+
+	/// /		public enum RetCode {
+	/// /			SUCCESS("SUCCESS"),
+	/// /			ERR_NUM("Error in 'number' cell"),
+	/// /			ERR_ID("Error in 'ID' cell"),
+	/// /			ERR_NAME("Error in 'name' cell"),
+	/// /			ERR_TYPE("Error in 'type' cell"),
+	/// /			ERR_LANG("Error in 'lang' cell"),
+	/// /			ERR_URL("Error in 'URL' cell");
+	/// /
+	/// /			private final String text;
+	/// /
+	/// /			RetCode(final String text) {
+	/// /				this.text = text;
+	/// /			}
+	/// /
+	/// /			@Override
+	/// /			public String toString() {
+	/// /				return text;
+	/// /			}
+	/// /		}
 //
 //		public ProjectRow(Object numObj, Object idObj, Object nameObj, Object typeObj, Object langObj, Object urlObj) {
 //			this.numObj = numObj;
@@ -745,6 +749,12 @@ public class ODSProcess {
 //		}
 //	}
 
-
+	/**
+	 * Logging instead log
+	 * @param msg logging message
+	 */
+	private void log(String msg) {
+		if (IS_LOG) System.out.println("[" + getClass().getName() + "] " + msg);
+	}
 
 }
