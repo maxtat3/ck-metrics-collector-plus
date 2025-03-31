@@ -25,7 +25,7 @@ public class App {
 	}
 
 
-	private static SysOutDelegate sysOutDelegate = new AppSysOut();
+	private static SysOutDelegate sod = new AppSysOut();
 
 	private static class AppSysOut implements SysOutDelegate {
 		@Override
@@ -50,7 +50,7 @@ public class App {
 //	}
 
 	protected static void setSysOutDelegate(SysOutDelegate sysOutDelegate) {
-		App.sysOutDelegate = sysOutDelegate;
+		App.sod = sysOutDelegate;
 	}
 
 
@@ -78,17 +78,17 @@ public class App {
 			msg += "Not passed arguments.\n";
 			msg += "See help using: -? or --help \n";    // See in {@link app.Args#isHelp}
 			msg += "Exit.\n";
-			sysOutDelegate.println(msg);
+			sod.println(msg);
 			return;
 		}
 
 		if (len == 1 && cliArgs.isHelp()) {
-			sysOutDelegate.println(helpMsg());
+			sod.println(helpMsg());
 			JCommander.newBuilder()
 					.addObject(cliArgs)
 					.build()
 					.usage();
-			sysOutDelegate.println(helpExamplesRunMsg());
+			sod.println(helpExamplesRunMsg());
 			return;
 		}
 
@@ -114,7 +114,7 @@ public class App {
 		}
 
 		if ( !isSetCorrectArgs ) {
-			sysOutDelegate.println("What needs to be done ? See examples typed -? or --help \nExit.");
+			sod.println("What needs to be done ? See examples typed -? or --help \nExit.");
 			return;
 		}
 		// End checks
@@ -128,14 +128,14 @@ public class App {
 			msg += "================================================ \n";
 
 			msg += makeBackupInputODSFile(cliArgs.getInputODS());
-			sysOutDelegate.println(msg);
+			sod.println(msg);
 			msg = "";
 
 			int countIDs = signProjects(cliArgs.getInputODS(), cliArgs.getSheetName(), cliArgs.getRange());
 
 			msg += countIDs + " 'names' and 'IDs' saved in input source ODS file. \n";
 			msg += "Finish.";
-			sysOutDelegate.println(msg);
+			sod.println(msg);
 
 		} else if (cliArgs.getMode().equals(Args.MODE_DOWNLOAD)) {
 			msg += "================================================ \n";
@@ -143,7 +143,7 @@ public class App {
 			msg += "================================================ \n";
 
 			msg += makeBackupInputODSFile(cliArgs.getInputODS());
-			sysOutDelegate.println(msg);
+			sod.println(msg);
 			msg = "";
 
 			String dwlCountProjects = downloadProjects(cliArgs.getInputODS(), cliArgs.getSheetName(), cliArgs.getRange(), cliArgs.getIgnoreRows(), cliArgs.getDestination());
@@ -151,7 +151,7 @@ public class App {
 
 			msg += "Downloaded " + dwlCountProjects + " projects.\n";
 			msg += "Finish.";
-			sysOutDelegate.println(msg);
+			sod.println(msg);
 
 		} else if (cliArgs.getMode().equals(Args.MODE_METRICS)) {
 			msg += "================================================ \n";
@@ -159,7 +159,7 @@ public class App {
 			msg += "================================================ \n";
 
 			msg += makeBackupInputODSFile(cliArgs.getInputODS());
-			sysOutDelegate.println(msg);
+			sod.println(msg);
 			msg = "";
 
 			int projectsCount = getMetrics(cliArgs.getInputODS(), cliArgs.getInputDir(), cliArgs.getSheetName(), cliArgs.getRange(), calcSettings);
@@ -167,7 +167,7 @@ public class App {
 			msg += "Metric values saved to input ODS file.\n";
 			msg += "Processed " + projectsCount + " projects. \n";
 			msg += "Finish.";
-			sysOutDelegate.println(msg);
+			sod.println(msg);
 
 		}
 	}
@@ -196,7 +196,7 @@ public class App {
 		isCorrectArgInputODS = checkInputODS(cliArgs);
 
 		if (cliArgs.getDestination() == null) {
-			sysOutDelegate.println("Destination path must be passed.");
+			sod.println("Destination path must be passed.");
 			isCorrectArgDestDir = false;
 		}
 
@@ -210,12 +210,12 @@ public class App {
 		isCorrectArgInputODS = checkInputODS(cliArgs);
 
 		if (cliArgs.getInputDir() == null) {
-			sysOutDelegate.println("Input projects dir must be passed. ");
+			sod.println("Input projects dir must be passed. ");
 			isCorrectArgInputProjDir = false;
 		}
 
 		if (cliArgs.getSheetName() == null) {
-			sysOutDelegate.println("Sheet name must be passed.");
+			sod.println("Sheet name must be passed.");
 			isCorrectArgSheet = false;
 		}
 
@@ -225,7 +225,7 @@ public class App {
 	// Internal use only
 	private static boolean checkGeneralModeArgs(Args cliArgs) {
 		if (cliArgs.getMode() == null) {
-			sysOutDelegate.println("Mode must be selected.\nExit.");
+			sod.println("Mode must be selected.\nExit.");
 			return false;
 		}
 		return true;
@@ -234,7 +234,7 @@ public class App {
 	// Internal use only
 	private static boolean checkInputODS(Args cliArgs) {
 		if (cliArgs.getInputODS() == null) {
-			sysOutDelegate.println("Input source ODS file argument must be passed.");
+			sod.println("Input source ODS file argument must be passed.");
 			return false;
 		}
 		return true;
@@ -286,7 +286,7 @@ public class App {
 		// Каталог в котором будут сохранены проекты должен быть пустой.
 		File dest = new File(destDir);
 		if (!dest.isDirectory()) {  // TODO: 08.02.25 may be use throw new NotFoundException !?
-			sysOutDelegate.println("Destination path is not directory.\nExit.");
+			sod.println("Destination path is not directory.\nExit.");
 			return "-1";
 		}
 
@@ -302,20 +302,20 @@ public class App {
 				Project pr = projects.get(dwlRow - ODSProcess.START_ROW_PROJECTS);
 				prIDCurrDwl = pr.getId();
 				if (ignoreRows.contains(dwlRow)) {
-					sysOutDelegate.println("-----------------------------------------------");
-					sysOutDelegate.println("!!! Ignoring row: " + dwlRow + ", ID: " + pr.getId() + " !!!");
-					sysOutDelegate.println("-----------------------------------------------");
+					sod.println("-----------------------------------------------");
+					sod.println("!!! Ignoring row: " + dwlRow + ", ID: " + pr.getId() + " !!!");
+					sod.println("-----------------------------------------------");
 					continue;
 				}
-				sysOutDelegate.println("-------");  // delimiter line in start project downloading
+				sod.println("-------");  // delimiter line in start project downloading
 
 				dwlCount = dwlRow - ODSProcess.START_ROW_PROJECTS + 1;  // Starting from number 1.
-				sysOutDelegate.println("Download project ID: " + pr.getId() + " (" + dwlCount + " / " + projects.size() + ")");
+				sod.println("Download project ID: " + pr.getId() + " (" + dwlCount + " / " + projects.size() + ")");
 				new GitHubDownloader().downloadGitRepo(pr.getId(), pr.getURL(), destDir);
 				// After thrown exception in GitHubDownloader - below code not call !!!
 
 				dwlRow++;
-				sysOutDelegate.println("-------");  // delimiter line in end project downloading
+				sod.println("-------");  // delimiter line in end project downloading
 			}
 			// Wrong dwlRow++  caused in last iteration.
 			// This need for return actual numbers of downloaded project for prevent recursion call main and then this method.
@@ -328,17 +328,17 @@ public class App {
 			if(dwlErrCount == 1) prsDwlErrMsgBuff = "Not downloaded projects are: \n";
 			prsDwlErrMsgBuff += "Row: " + dwlRow + ", project ID: " + prIDCurrDwl + "\n";
 
-			sysOutDelegate.println("~~~~ Downloading project ID: " + prIDCurrDwl + " caused error. ~~~~");
-			sysOutDelegate.println("-------");
+			sod.println("~~~~ Downloading project ID: " + prIDCurrDwl + " caused error. ~~~~");
+			sod.println("-------");
 
 			main(argv);
 		}
 
 		// Make action in end download all projects
 		if (dwlRow == odsProc.getRealLastProjectsRowFromSheet()) {
-			sysOutDelegate.println("-----------------------------------------------");
-			sysOutDelegate.println(prsDwlErrMsgBuff);
-			sysOutDelegate.println("-----------------------------------------------");
+			sod.println("-----------------------------------------------");
+			sod.println(prsDwlErrMsgBuff);
+			sod.println("-----------------------------------------------");
 			return String.valueOf(dwlCount);
 		}
 
@@ -400,7 +400,7 @@ public class App {
 			} else {
 				projID = Utils.extractProjectIDFromFS(prPathFS, projPathsFS.get(0));// last project compared by first.
 			}
-			sysOutDelegate.println("Process project ID = " + projID);
+			sod.println("Process project ID = " + projID);
 
 			Project project = new Project();
 			project.setId(projID);  // ID retrieved from FS
@@ -444,7 +444,7 @@ public class App {
 				// Проект может быть не распознан потому что некоторые поля в исходном ODS документе могут быть не указаны.
 				// Например, не указано имя для проекта и этого уже достаточно чтобы проект не был распозан.
 				// См. метод app.ODSProcess.ProjectRow.isProjectRow
-				sysOutDelegate.println("Project " + projID + " not found in input ODS file. This project passed.\n");
+				sod.println("Project " + projID + " not found in input ODS file. This project passed.\n");
 				continue;
 			}
 
