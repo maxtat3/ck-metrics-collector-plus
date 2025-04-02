@@ -97,13 +97,13 @@ public class ProcessorTest {
 		Project pr = new Project();
 		new Processor().calcMetrics(prPath, pr, settings);
 
-		Assert.assertEquals(1961, pr.getMetrics().getLOC());
-		Assert.assertEquals(89, pr.getMetrics().getNoM());
-		Assert.assertEquals(13, pr.getMetrics().getNC());
-		Assert.assertEquals(29, pr.getMetrics().getDIT());
-		Assert.assertEquals(270, pr.getMetrics().getWMC());
-		Assert.assertEquals(153, pr.getMetrics().getCBO());
-		Assert.assertEquals(382, pr.getMetrics().getRFC());
+		Assert.assertEquals(1080, pr.getMetrics().getLOC());
+		Assert.assertEquals(123, pr.getMetrics().getNoM());
+		Assert.assertEquals(21, pr.getMetrics().getNC());
+		Assert.assertEquals(47, pr.getMetrics().getDIT());
+		Assert.assertEquals(210, pr.getMetrics().getWMC());
+		Assert.assertEquals(191, pr.getMetrics().getCBO());
+		Assert.assertEquals(304, pr.getMetrics().getRFC());
 	}
 
 	@Test
@@ -113,13 +113,13 @@ public class ProcessorTest {
 		Project pr = new Project();
 		new Processor().calcMetrics(prPath, pr, settings);
 
-		Assert.assertEquals(1961, pr.getMetrics().getLOC());
-		Assert.assertEquals(89, pr.getMetrics().getNoM());
-		Assert.assertEquals(13, pr.getMetrics().getNC());
-		Assert.assertEquals(29, pr.getMetrics().getDIT());
-		Assert.assertEquals(270, pr.getMetrics().getWMC());
-		Assert.assertEquals(153, pr.getMetrics().getCBO());
-		Assert.assertEquals(382, pr.getMetrics().getRFC());
+		Assert.assertEquals(37673, pr.getMetrics().getLOC());
+		Assert.assertEquals(3424, pr.getMetrics().getNoM());
+		Assert.assertEquals(255, pr.getMetrics().getNC());
+		Assert.assertEquals(941, pr.getMetrics().getDIT());
+		Assert.assertEquals(7736, pr.getMetrics().getWMC());
+		Assert.assertEquals(3503, pr.getMetrics().getCBO());
+		Assert.assertEquals(7014, pr.getMetrics().getRFC());
 	}
 //	===========================================
 
