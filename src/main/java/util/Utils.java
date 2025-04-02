@@ -106,16 +106,20 @@ public class Utils {
 	}
 
 	/**
-	 * Extract unique project ID only from absolute path.
+	 * Extract unique project ID only from absolute path in files system (FS).
+	 * Path 2 using only for search first different symbol in path 1.
 	 *
-	 * @param path1 path to project 1
-	 * @param path2 path to project 2
+	 * @param path1 path to project 1 in FS
+	 * @param path2 path to project 2 in FS
 	 * @return project ID only for project 1 path
 	 */
 	public static String extractProjectIDFromFS(String path1, String path2) {
+		path1 = path1.endsWith("/") ? path1 : path1 + "/";
+
 		char[] chp1 = path1.toCharArray();
 		char[] chp2 = path2.toCharArray();
 
+		// Путь 2 нужен только для нахождения 1-го неодинакового символа в пути 1.
 		// Позиция первого не одинакового символа для проекта 1.
 		// Это будет средняя позиция, от которой движение в лево и в право до символа-разделителя.
 		int pos = 0;
