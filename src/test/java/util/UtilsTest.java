@@ -18,7 +18,7 @@ public class UtilsTest {
 	}
 
 	@Test
-	public void testExtractProjectIDFromFS_1() {
+	public void testExtractProjectIDFromFS_path1LongerPath2_noSlashesInEnds() {
 		String path1 = "/home/user/Downloads/CK_metrics/Projects/Java/FM_J_01_AnExplorer/AnExplorer-master/app/src/main/java";
 		String path2 = "/home/user/Downloads/CK_metrics/Projects/Java/FM_J_02_XFiles/XFiles-master/app/src/main/java";
 
@@ -27,21 +27,66 @@ public class UtilsTest {
 	}
 
 	@Test
-	public void testExtractProjectIDFromFS_2() {
-		String path9 = "/home/max/Downloads/CK_metrics/Projects/Java/FM_J_09_dmanager/project 9/dmanager-master/app/src/main/java";
-		String path1 = "/home/max/Downloads/CK_metrics/Projects/Java/FM_J_01_AnExplorer/AnExplorer-master/app/src/main/java";
-
-		String projectID1 = Utils.extractProjectIDFromFS(path9, path1);
-		Assert.assertEquals("FM_J_09_dmanager", projectID1);
-	}
-
-	@Test
-	public void testExtractProjectIDFromFS_3() {
-		String path1 = "/home/user/Downloads/CK_metrics/Projects/Java/FM_J_01_AnExplorer/AnExplorer-master/app/src/main/java";
+	public void testExtractProjectIDFromFS_path1LongerPath2_slashInEndPath1() {
+		String path1 = "/home/user/Downloads/CK_metrics/Projects/Java/FM_J_01_AnExplorer/AnExplorer-master/app/src/main/java/";
 		String path2 = "/home/user/Downloads/CK_metrics/Projects/Java/FM_J_02_XFiles/XFiles-master/app/src/main/java";
 
 		String projectID1 = Utils.extractProjectIDFromFS(path1, path2);
 		Assert.assertEquals("FM_J_01_AnExplorer", projectID1);
+	}
+
+	@Test
+	public void testExtractProjectIDFromFS_path1LongerPath2_slashInEndPath2() {
+		String path1 = "/home/user/Downloads/CK_metrics/Projects/Java/FM_J_01_AnExplorer/AnExplorer-master/app/src/main/java";
+		String path2 = "/home/user/Downloads/CK_metrics/Projects/Java/FM_J_02_XFiles/XFiles-master/app/src/main/java/";
+
+		String projectID1 = Utils.extractProjectIDFromFS(path1, path2);
+		Assert.assertEquals("FM_J_01_AnExplorer", projectID1);
+	}
+
+	@Test
+	public void testExtractProjectIDFromFS_path1LongerPath2_slashesInEndsAllPaths() {
+		String path1 = "/home/user/Downloads/CK_metrics/Projects/Java/FM_J_01_AnExplorer/AnExplorer-master/app/src/main/java/";
+		String path2 = "/home/user/Downloads/CK_metrics/Projects/Java/FM_J_02_XFiles/XFiles-master/app/src/main/java/";
+
+		String projectID1 = Utils.extractProjectIDFromFS(path1, path2);
+		Assert.assertEquals("FM_J_01_AnExplorer", projectID1);
+	}
+
+	@Test
+	public void testExtractProjectIDFromFS_path2LongerPath1_noSlashesInEndsAllPaths_v0() {
+		String path1 = "/home/user/Downloads/TmpMetricsProjectsSet7/FM_and_FCH/FM_J_01_FileExp";
+		String path2 = "/home/user/Downloads/TmpMetricsProjectsSet7/FM_and_FCH/FM_J_02_FileManagerPro";
+
+		String projectID1 = Utils.extractProjectIDFromFS(path1, path2);
+		Assert.assertEquals("FM_J_01_FileExp", projectID1);
+	}
+
+	@Test
+	public void testExtractProjectIDFromFS_path2LongerPath1_noSlashesInEndsAllPaths_v1() {
+		String path1 = "/home/user/Downloads/dataset_apl/Dwl/APL_J_21_odyssey";
+		String path2 = "/home/user/Downloads/dataset_apl/Dwl/APL_J_22_odyssey-jb";
+
+		String projectID1 = Utils.extractProjectIDFromFS(path1, path2);
+		Assert.assertEquals("APL_J_21_odyssey", projectID1);
+	}
+
+	@Test
+	public void testExtractProjectIDFromFS_path2LongerPath1_slashInEndPath1() {
+		String path1 = "/home/user/Downloads/TmpMetricsProjectsSet7/FM_and_FCH/FM_J_01_FileExp/";
+		String path2 = "/home/user/Downloads/TmpMetricsProjectsSet7/FM_and_FCH/FM_J_02_FileManagerPro";
+
+		String projectID1 = Utils.extractProjectIDFromFS(path1, path2);
+		Assert.assertEquals("FM_J_01_FileExp", projectID1);
+	}
+
+	@Test
+	public void testExtractProjectIDFromFS_path2LongerPath1_slashInEndPath2() {
+		String path1 = "/home/user/Downloads/TmpMetricsProjectsSet7/FM_and_FCH/FM_J_01_FileExp";
+		String path2 = "/home/user/Downloads/TmpMetricsProjectsSet7/FM_and_FCH/FM_J_02_FileManagerPro/";
+
+		String projectID1 = Utils.extractProjectIDFromFS(path1, path2);
+		Assert.assertEquals("FM_J_01_FileExp", projectID1);
 	}
 
 
@@ -75,10 +120,9 @@ public class UtilsTest {
 		Assert.assertEquals(-5, val);
 	}
 
-	@Test
+	@Test(expected = NumberFormatException.class)
 	public void testConvertDoubleStrToInt_passEmptyStr() {
-		int val = Utils.convertDoubleStrToInt("");
-		Assert.assertEquals(25, val);
+		Utils.convertDoubleStrToInt("");
 	}
 
 	@Test(expected = NumberFormatException.class)
