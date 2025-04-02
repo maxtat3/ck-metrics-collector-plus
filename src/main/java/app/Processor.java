@@ -226,10 +226,10 @@ public class Processor {
 				sumRFC += Integer.parseInt(record.get("rfc"));
 				sumCBO += Integer.parseInt(record.get("cbo"));
 				sumLOC += Integer.parseInt(record.get("loc"));
-
-				metrics = project.new Metrics(sumLOC, sumNC, sumNoM, sumDIT, sumWMC, sumRFC, sumCBO);
-				project.setMetrics(metrics);
 			}
+			metrics = project.new Metrics(sumLOC, sumNC, sumNoM, sumDIT, sumWMC, sumRFC, sumCBO);
+			project.setMetrics(metrics);
+
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
