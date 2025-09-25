@@ -452,7 +452,7 @@ public class ODSProcess {
 
 				// Generate resulting ID of the project
 				// TODO: 17.03.25 may change pattern for projects ID to as example: 15_FM_FCH_K_File-Picker-Library  
-				String id = type + subType + "_" + lang + "_" + num + "_" + name;
+				String id = num + "_" + type + subType + "_" + lang + "_" + name;
 				ids.put(i, id);
 			}
 

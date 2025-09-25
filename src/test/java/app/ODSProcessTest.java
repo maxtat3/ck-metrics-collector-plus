@@ -215,13 +215,13 @@ public class ODSProcessTest {
 //			Number of rows in this SODS library started from 0. But in ODS Spreadsheet rows started from 1.
 //			See {@link #START_ROW}
 			if (row == 3) {
-				Assert.assertEquals("FM_J_02_XFiles", id);
+				Assert.assertEquals("02_FM_J_XFiles", id);
 
 			} else if (row == 9) {
-				Assert.assertEquals("FM_K_08_Simple-File-Manager", id);
+				Assert.assertEquals("08_FM_K_Simple-File-Manager", id);
 
 			} else if (row == 16) {
-				Assert.assertEquals("FM_FCH_K_15_File-Picker-Library", id);
+				Assert.assertEquals("15_FM_FCH_K_File-Picker-Library", id); 
 			}
 		}
 	}
