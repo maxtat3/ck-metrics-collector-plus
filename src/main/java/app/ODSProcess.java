@@ -585,13 +585,13 @@ public class ODSProcess {
 				log("range metrics values = " + range);
 
 				Object[] metricValues = {
-						String.valueOf(pr.getMetrics().getLOC()),
-						String.valueOf(pr.getMetrics().getNC()),
-						String.valueOf(pr.getMetrics().getNoM()),
-						String.valueOf(pr.getMetrics().getDIT()),
-						String.valueOf(pr.getMetrics().getWMC()),
-						String.valueOf(pr.getMetrics().getRFC()),
-						String.valueOf(pr.getMetrics().getCBO())
+						pr.getMetrics().getLOC(),
+						pr.getMetrics().getNC(),
+						pr.getMetrics().getNoM(),
+						pr.getMetrics().getDIT(),
+						pr.getMetrics().getWMC(),
+						pr.getMetrics().getRFC(),
+						pr.getMetrics().getCBO()
 				};
 
 				sheet.getRange(range).setValues(metricValues);
@@ -750,7 +750,7 @@ public class ODSProcess {
 //	}
 
 	/**
-	 * Logging instead log
+	 * Logging instead System.out.println.
 	 * @param msg logging message
 	 */
 	private void log(String msg) {
